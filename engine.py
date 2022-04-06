@@ -20,11 +20,11 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
     device = torch.device(args.device)
     cudnn.benchmark = True
 
-    #args.exp_name = args.model_name + "_" + args.init
-    #model_path = os.path.join("./Models/Classification",args.data_set)
-    #output_path = os.path.join("./Outputs/Classification",args.data_set)
-
+    # Example output_path = "./Outputs/Classification/ChestXray14"
+    # Example model_path = "./Models/Classification/ChestXray14"
+    # Example args.exp_name = Resnet50_Random
     model_path = os.path.join(model_path, args.exp_name)
+    # Example model_path = "./Models/Classification/ChestXray14/Resnet50_Random"
 
     if not os.path.exists(model_path):
         os.makedirs(model_path)
@@ -40,6 +40,8 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                                      num_workers=args.workers, pin_memory=True)
         log_file = os.path.join(
             model_path, "models_" + str(args.exp_no) + ".log")
+        # Previously log file was saved to log_file = "./Models/Classification/ChestXray14/Resnet50_Random/models.log"
+        # Now log file is changed to for example log_file = "./Models/Classification/ChestXray14/Resnet50_Random/models_0.log"
 
         # training phase
         print("start training....")
@@ -47,10 +49,14 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
             print("run:", str(i+1))
             start_epoch = 0
             init_loss = 1000000
+
             experiment = args.exp_name + "_run_" + str(i + args.exp_no)
+            # Example experiment = Resnet50_Random_run_0
+
             best_val_loss = init_loss
             patience_counter = 0
             save_model_path = os.path.join(model_path, experiment)
+            # Example save_model_path = "./Models/Classification/ChestXray14/Resnet50_Random/Resnet50_Random_run_0"
             criterion = torch.nn.BCELoss()
 
             model = build_classification_model(args)
@@ -68,7 +74,10 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                                              threshold=0.0001, min_lr=0, verbose=True)
 
             if args.resume:
+                # Example model_path = "./Models/Classification/ChestXray14/Resnet50_Random"
+                # Example experiment = Resnet50_Random_run_0
                 resume = os.path.join(model_path, experiment + '.pth.tar')
+                # Example resume = "./Models/Classification/ChestXray14/Resnet50_Random/Resnet50_Random_run_0.pth.tar"
                 if os.path.isfile(resume):
                     print("=> loading checkpoint '{}'".format(resume))
                     checkpoint = torch.load(resume)
@@ -99,6 +108,7 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                         'optimizer': optimizer.state_dict(),
                         'scheduler': lr_scheduler.state_dict(),
                     },  filename=save_model_path)
+                    # Example save_model_path = "./Models/Classification/ChestXray14/Resnet50_Random/Resnet50_Random_run_0"
 
                     print(
                         "Epoch {:04d}: val_loss improved from {:.5f} to {:.5f}, saving model to {}".format(epoch, best_val_loss, val_loss,
@@ -109,25 +119,31 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                 else:
                     print("Epoch {:04d}: val_loss did not improve from {:.5f} ".format(
                         epoch, best_val_loss))
-                    patience_counter += 1
+                    patience_counter += 1  # Should be commented when not using Early Stopping
 
                 if patience_counter > args.patience:
                     print("Early Stopping")
                     break
 
             # log experiment
-            # experiment = args.exp_name + "_run_" + str(i + args.exp_no)
+            # Example experiment = Resnet50_Random_run_0
             with open(log_file, 'a') as f:
                 f.write(experiment + "\n")
                 f.close()
 
     print("start testing.....")
+    # Example output_path = "./Outputs/Classification/ChestXray14"
+    # Example args.exp_name = Resnet50_Random
     output_file = os.path.join(output_path, args.exp_name + "_results.txt")
+    # Example output_file = "./Outputs/Classification/ChestXray14/Resnet50_Random_results.txt"
 
     data_loader_test = DataLoader(dataset=dataset_test, batch_size=args.batch_size, shuffle=False,
                                   num_workers=args.workers, pin_memory=True)
 
+    # Example model_path = "./Models/Classification/ChestXray14/Resnet50_Random"
     log_file = os.path.join(model_path, "models_" + str(args.exp_no) + ".log")
+    # Example log_file = "./Models/Classification/ChestXray14/Resnet50_Random/models_0.log"
+
     if not os.path.isfile(log_file):
         print("log_file ({}) not exists!".format(log_file))
     else:
