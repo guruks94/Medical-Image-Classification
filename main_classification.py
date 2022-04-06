@@ -99,10 +99,12 @@ def main(args):
 
     args.exp_name = args.model_name + "_" + args.init
     # Example args.exp_name = Resnet50_Random
-    model_path = os.path.join("./Models/Classification", args.data_set)
-    # Example model_path = "./Models/Classification/ChestXray14"
-    output_path = os.path.join("./Outputs/Classification", args.data_set)
-    # Example output_path = "./Outputs/Classification/ChestXray14"
+    model_path = os.path.join(
+        "/scratch/gkempego/Medical-Image-Classification/Models/Classification", args.data_set)
+    # Example model_path = "/scratch/gkempego/Medical-Image-Classification/Models/Classification/ChestXray14"
+    output_path = os.path.join(
+        "/scratch/gkempego/Medical-Image-Classification/Outputs/Classification", args.data_set)
+    # Example output_path = "/scratch/gkempego/Medical-Image-Classification/Outputs/Classification/ChestXray14"
 
     if args.data_set == "ChestXray14":
         diseases = ['Atelectasis', 'Cardiomegaly', 'Effusion', 'Infiltration', 'Mass', 'Nodule',
