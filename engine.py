@@ -119,7 +119,8 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                 else:
                     print("Epoch {:04d}: val_loss did not improve from {:.5f} ".format(
                         epoch, best_val_loss))
-                    patience_counter += 1  # Should be commented when not using Early Stopping
+                    if args.early_stop:
+                        patience_counter += 1
 
                 if patience_counter > args.patience:
                     print("Early Stopping")
