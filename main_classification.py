@@ -142,8 +142,8 @@ def main(args):
                               dataset_train, dataset_val, dataset_test, test_diseases)
 
     elif args.data_set == "VinDrCXR":
-        diseases = ['No finding', 'Other diseases', 'Pleural effusion',
-                    'Lung tumor', 'Pneumonia', 'Tuberculosis']
+        diseases = ['Lung tumor', 'Pneumonia', 'Tuberculosis',
+                    'Other diseases', 'Pleural effusion', 'No finding']
         dataset_train = VinDrCXR(images_path=args.data_dir, file_path=args.train_list,
                                  augment=build_transform_classification(normalize=args.normalization, mode="train"))
 

@@ -22,6 +22,9 @@ def build_transform_classification(normalize, crop_size=224, resize=256, mode="t
     elif normalize.lower() == "chestx-ray":
         normalize = transforms.Normalize(
             [0.5056, 0.5056, 0.5056], [0.252, 0.252, 0.252])
+    elif normalize.lower() == "vindr-cxr":
+        normalize = transforms.Normalize(
+            [0.4831, 0.4542, 0.4044], [0.2281, 0.2231, 0.2241])
     elif normalize.lower() == "none":
         normalize = None
     else:
@@ -31,6 +34,9 @@ def build_transform_classification(normalize, crop_size=224, resize=256, mode="t
         transformations_list.append(transforms.RandomResizedCrop(crop_size))
         transformations_list.append(transforms.RandomHorizontalFlip())
         transformations_list.append(transforms.RandomRotation(7))
+        if normalize.lower() == "vindr-cxr":
+            transformations_list.append(
+                transforms.ColorJitter(brightness=0.5, contrast=0.5))
         transformations_list.append(transforms.ToTensor())
         if normalize is not None:
             transformations_list.append(normalize)
@@ -179,7 +185,7 @@ class PadChestDataset(Dataset):
 
 class VinDrCXR(Dataset):
 
-    def __init__(self, images_path, file_path, augment, num_class=8, annotaion_percent=100):
+    def __init__(self, images_path, file_path, augment, num_class=6, annotaion_percent=100):
 
         self.img_list = []
         self.img_label = []
@@ -216,26 +222,41 @@ class VinDrCXR(Dataset):
                 self.img_list.append(_img_list[i])
                 self.img_label.append(_img_label[i])
 
-    def __getitem__(self, index):
-
-        imagePath = self.img_list[index]
-
-        #imageData = Image.open(imagePath).convert('RGB')
+    def load_dcm_image(imagePath):
+        # Read dicom file.
         dcm_file = dicom.dcmread(imagePath)
+
+        # Bits Stored' value should match the sample bit depth of the JPEG2000 pixel (16 bit) data in order to get the correct pixel data.
+
         if dcm_file.BitsStored in (10, 12):
             dcm_file.BitsStored = 16
+
         raw_image = dcm_file.pixel_array
+
+        # Normalize pixels to be in [0, 255].
         rescaled_image = cv2.convertScaleAbs(dcm_file.pixel_array,
                                              alpha=(255.0/dcm_file.pixel_array.max()))
+
+        # Correct image inversion.
         if dcm_file.PhotometricInterpretation == "MONOCHROME1":
             rescaled_image = cv2.bitwise_not(rescaled_image)
+
+        # Perform histogram equalization if the input is original dicom file.
         if dcm_file.pixel_array.max() > 255:
             adjusted_image = cv2.equalizeHist(rescaled_image)
         else:
             adjusted_image = rescaled_image
+
         image = Image.fromarray(adjusted_image)
         imageData = image.convert('RGB')
 
+        return imageData
+
+    def __getitem__(self, index):
+
+        imagePath = self.img_list[index]
+        #imageData = Image.open(imagePath).convert('RGB')
+        imageData = self.load_dcm_image(imagePath)
         imageLabel = torch.FloatTensor(self.img_label[index])
 
         if self.augment != None:
