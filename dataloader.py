@@ -16,6 +16,9 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 def build_transform_classification(normalize, crop_size=224, resize=256, mode="train", test_augment=True):
     transformations_list = []
 
+    # Initialize isvindrcxr to False
+    isvindrcxr = False
+
     if normalize.lower() == "imagenet":
         normalize = transforms.Normalize(
             [0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -23,6 +26,7 @@ def build_transform_classification(normalize, crop_size=224, resize=256, mode="t
         normalize = transforms.Normalize(
             [0.5056, 0.5056, 0.5056], [0.252, 0.252, 0.252])
     elif normalize.lower() == "vindr-cxr":
+        isvindrcxr = True  # Set isvindrcxr to True for VinDr-CXR dataset
         normalize = transforms.Normalize(
             [0.4831, 0.4542, 0.4044], [0.2281, 0.2231, 0.2241])
     elif normalize.lower() == "none":
@@ -34,7 +38,7 @@ def build_transform_classification(normalize, crop_size=224, resize=256, mode="t
         transformations_list.append(transforms.RandomResizedCrop(crop_size))
         transformations_list.append(transforms.RandomHorizontalFlip())
         transformations_list.append(transforms.RandomRotation(7))
-        if normalize.lower() == "vindr-cxr":
+        if isvindrcxr:
             transformations_list.append(
                 transforms.ColorJitter(brightness=0.5, contrast=0.5))
         transformations_list.append(transforms.ToTensor())
@@ -222,7 +226,7 @@ class VinDrCXR(Dataset):
                 self.img_list.append(_img_list[i])
                 self.img_label.append(_img_label[i])
 
-    def load_dcm_image(imagePath):
+    def load_dcm_image(self, imagePath):
         # Read dicom file.
         dcm_file = dicom.dcmread(imagePath)
 
