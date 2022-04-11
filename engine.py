@@ -101,6 +101,10 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                 lr_scheduler.step(val_loss)
 
                 if val_loss < best_val_loss:
+                    print(
+                        "Epoch {:04d}: val_loss improved from {:.5f} to {:.5f}, saving model to {}".format(epoch, best_val_loss, val_loss,
+                                                                                                           save_model_path))
+                    best_val_loss = val_loss
                     save_checkpoint({
                         'epoch': epoch + 1,
                         'lossMIN': best_val_loss,
@@ -110,10 +114,6 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                     },  filename=save_model_path)
                     # Example save_model_path = "./Models/Classification/ChestXray14/Resnet50_Random/Resnet50_Random_run_0"
 
-                    print(
-                        "Epoch {:04d}: val_loss improved from {:.5f} to {:.5f}, saving model to {}".format(epoch, best_val_loss, val_loss,
-                                                                                                           save_model_path))
-                    best_val_loss = val_loss
                     patience_counter = 0
 
                 else:
@@ -125,6 +125,16 @@ def classification_engine(args, model_path, output_path, diseases, dataset_train
                 if patience_counter > args.patience:
                     print("Early Stopping")
                     break
+
+            # Save the model weights at the end of last epoch when not using early stopping
+            if not args.early_stop:
+                save_checkpoint({
+                    'epoch': epoch + 1,
+                    'lossMIN': best_val_loss,
+                    'state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'scheduler': lr_scheduler.state_dict(),
+                },  filename=save_model_path)
 
             # log experiment
             # Example experiment = Resnet50_Random_run_0
